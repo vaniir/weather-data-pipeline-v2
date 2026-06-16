@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: daily_weather_marts
+    columns:
+
+      - name: city
+        tests:
+          - not_null
+
+      - name: weather_date
+        tests:
+          - not_null
+
+  - name: weekly_weather_marts
+    columns:
+
+      - name: city
+        tests:
+          - not_null
+
+      - name: weather_week
+        tests:
+          - not_null
+
+  - name: weather_condition_marts
+    columns:
+
+      - name: city
+        tests:
+          - not_null
+
+      - name: weather_date
+        tests:
+          - not_null
+
+      - name: weather_main
+        tests:
+          - not_null
+
+  - name: weather_summary_mart
+    columns:
+
+      - name: city
+        tests:
+          - not_null
+  
