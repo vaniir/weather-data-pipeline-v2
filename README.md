@@ -1,183 +1,208 @@
-# Weather Data Pipeline
+# Automated Weather Data ELT Pipeline
 
 ## Overview
 
-This project simulates a weather data engineering pipeline using Python, PostgreSQL, and dbt.
+This project demonstrates an automated ELT weather data pipeline built with Python, PostgreSQL, dbt, and Prefect.
 
-Weather data is generated or requested, stored as raw JSON in PostgreSQL, transformed through dbt staging and cleaning models, and aggregated into analytics-ready marts.
+The pipeline retrieves weather data from the OpenWeather API, stores raw JSON payloads in PostgreSQL, orchestrates transformations and data quality tests with Prefect and dbt, and produces analytics-ready tables for reporting and analysis.
 
-## Architecture
+## System Architecture
 
-Synthetic Weather Generator or API requests
-    ↓
-PostgreSQL (raw_weather_data)
-    ↓
-dbt Staging Models
-    ↓
-dbt Clean Models
-    ↓
-Analytics Marts
+```mermaid
+flowchart LR
+    API[OpenWeather API]
+    PREFECT[Prefect]
+    PY[Python Ingestion]
+    PG[(PostgreSQL)]
+    DBT[dbt]
+    MARTS[Analytics Marts]
+
+    API --> PY
+    PY --> PG
+    PG --> DBT
+    DBT --> MARTS
+
+    PREFECT -. Orchestrates .-> PY
+    PREFECT -.-> DBT
+```
 
 ## Tech Stack
 
-- Python
+| Category | Technology |
+|----------|------------|
+| Programming | Python |
+| Database | PostgreSQL |
+| Data Transformation | dbt |
+| Orchestration | Prefect |
+| Database Driver | psycopg2 |
+| Configuration | python-dotenv |
+| Data Format | JSON / JSONB |
+
+## Features
+
+- Automated weather data ingestion from the OpenWeather API
+- Workflow orchestration using Prefect
+- Raw JSON weather data storage in PostgreSQL
+- Data transformation using dbt staging, cleaning, and mart models
+- Data quality validation with dbt tests
+- Analytics-ready weather marts for reporting and analysis
+- Environment-based configuration using `.env`
+
+## Project Structure
+.
+├── Orchestration/
+│   └── weather_flow,py
+├── screenshots/
+├── src/
+│   ├── ingestion.py
+│   └── setup_db.py
+├── weather_dbt/
+│   ├── models/
+│   ├── tests/
+│   └── dbt_project.yml
+├── .env.example
+├── README.md
+└── requirements.txt
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11.5
 - PostgreSQL
-- dbt
-- psycopg2
-- dotenv
+- dbt Core
+- Prefect
 
-## Data Pipeline
+### Installation
 
-### Raw Layer
+### Installation
 
-Weather data is stored in PostgreSQL as JSONB payloads.
-
-### Staging Layer
-
-dbt staging models extract fields from JSON and apply data type conversions.
-
-### Clean Layer
-
-dbt cleaning models:
-- standardize text fields
-- validate weather measurements
-- create data quality flags
-
-### Mart Layer
-
-Analytics-ready tables including:
-- daily weather summaries
-- weekly weather summaries
-- city-level weather statistics
-
-## Data Quality Checks
-
-The pipeline validates:
-
-- location fields
-- temperature ranges
-- humidity ranges
-- wind measurements
-- pressure values
-- cloud coverage values
-
-Validation results are stored as flags for downstream use.
-
-## How to Run
-
-### 1. Create environment variables
-
-Create a `.env` file in the root directory:
-
-```
-DB_HOST=
-DB_NAME=
-DB_USER=
-DB_PASSWORD=
-DB_PORT=
-
-OPENWEATHER_API_KEY= (only required for API ingestion mode)
-```
-
----
-
-### 2. Initialize database
-
-Run the one-time database setup:
+Clone the repository:
 
 ```bash
-cd src
-python setup_db.py
+git clone https://github.com/vaniir/weather-data-pipeline-v2
+cd weather-data--pipeline-v2
 ```
 
-This creates the required tables for raw weather ingestion.
-
----
-
-### 3. Ingest data (choose one option)
-
-#### Option A (Recommended): Synthetic Data
+Create and activate a virtual environment:
 
 ```bash
-cd scripts
-python generate_synthetic_data.py
+python -m venv .venv
 ```
 
-Generates:
-- 14 cities
-- hourly data
-- 30 days of weather records
-
-#### Option B: OpenWeather API ingestion
+**Windows**
 
 ```bash
-cd src
-python ingestion.py
+.venv\Scripts\activate
 ```
 
-Pulls live weather data from OpenWeather API.
-
----
-
-### 4. Run dbt transformations
+**Linux/macOS**
 
 ```bash
-cd weather_dbt
-dbt run
+source .venv/bin/activate
 ```
 
-This executes:
-- staging models
-- cleaning models
-- marts
-
----
-
-### 5. Run data quality tests
+Install the required dependencies:
 
 ```bash
-dbt test
+pip install -r requirements.txt
 ```
 
-Validates:
-- null checks
-- range validations
-- mart-level constraints
+### Configuration
 
----
+1. Create a PostgreSQL database.
+2. Copy `.env.example` to `.env` and update the connection details.
+3. Configure your dbt profile.
+4. Run `setup_db.py` to initialize the database.
 
-### 6. Query results
+### Run the Pipeline
 
-Example queries:
+Start the Prefect server.
 
-```sql
-SELECT * FROM daily_weather_mart;
-SELECT * FROM weekly_weather_mart;
-SELECT * FROM weather_condition_mart;
-SELECT * FROM weather_summary_mart;
+```bash
+prefect server start
 ```
 
----
+Create the deployment.
 
-## Pipeline Summary
+```bash
+prefect deploy weather_flow.py:weather_data_pipeline -n local-deployment -p my-pool
+```
+**Note:** The deployment only needs to be recreated if the flow definition changes.
 
+Start the Prefect worker.
+
+```bash
+prefect worker start --pool my-pool
 ```
-Ingestion (Synthetic or API)
-        ↓
-PostgreSQL (raw layer)
-        ↓
-dbt staging (JSON extraction)
-        ↓
-dbt cleaning (validation + standardization)
-        ↓
-dbt marts (analytics-ready tables)
-        ↓
-dbt tests (data quality validation)
+
+The worker will poll the work pool and execute scheduled flow runs.
+
+## Pipeline Workflow
+
+```mermaid
+flowchart TD
+    A([Flow Triggered]) --> B[Fetch Weather Data]
+    B --> C[Store Raw JSON in PostgreSQL]
+    C --> D[Run dbt Staging Models]
+    D --> E[Run dbt Clean Models]
+    E --> F[Run dbt Mart Models]
+    F --> G[Execute dbt Tests]
+    G --> H([Pipeline Complete])
 ```
+
+## Data Quality
+
+The pipeline uses dbt tests to validate critical fields during the transformation process.
+
+Current validations include:
+
+- Non-null city values
+- Non-null country values
+- Non-null temperature values
+- Non-null humidity values
+
+Current validations focus on required fields such as city, country, temperature, and humidity. Additional validation rules can be incorporated as data quality requirements evolve.
+
+## Analytics Marts
+
+The pipeline produces analytics-ready marts, including:
+
+- Daily weather summaries
+- Weekly weather summaries
+- Weather condition statistics
+- City-level weather summaries
+
+## Screenshots
+
+### Prefect Dashboard
+
+The Prefect dashboard provides an overview of registered flows, deployments, and workers.
+
+![Prefect Dashboard](screenshots/dashboard.png)
+
+### Flow Runs
+
+The Flow Runs page shows the execution history of the pipeline, including completed and active runs with their execution status.
+
+![Flow Runs](screenshots/flow-run.png)
+
+### dbt Lineage Graph
+
+The dbt lineage graph visualizes model dependencies from the raw data source through staging, cleaning, and analytics marts.
+
+![dbt Lineage](screenshots/linear-graph.png)
+
+### Sample Query Results
+
+Example output from the analytics marts after the ELT pipeline completes successfully.
+
+![Query Results](screenshots/sample-query.png)
 
 ## Future Improvements
 
-- Additional weather data sources
-- Automated orchestration
-- Cloud deployment
-- Advanced monitoring
+- Migrate orchestration from a local Prefect server to Prefect Cloud
+- Deploy the pipeline to a cloud-based data platform using Snowflake and AWS
+- Expand dbt data quality tests with additional validation rules
+- Integrate additional weather data sources
+- Containerize the pipeline with Docker
