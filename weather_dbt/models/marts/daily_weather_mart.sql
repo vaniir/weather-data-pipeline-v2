@@ -9,7 +9,7 @@ SELECT
     ROUND(AVG(wind_speed), 2) AS avg_wind_speed,
     ROUND(AVG(cloud_coverage), 2) AS avg_cloud_coverage
 
-FROM {{ ref('clean_syntheticweather') }}
+FROM {{ ref('clean_openweather') }}
 
 WHERE
     valid_location

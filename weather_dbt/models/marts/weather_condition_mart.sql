@@ -4,7 +4,7 @@ SELECT
     weather_main,
     COUNT(*) AS occurrences
 
-FROM {{ ref('clean_syntheticweather') }}
+FROM {{ ref('clean_openweather') }}
 
 WHERE valid_location
 

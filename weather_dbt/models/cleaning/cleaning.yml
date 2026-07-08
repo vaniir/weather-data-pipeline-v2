@@ -1,25 +1,6 @@
 version: 2
 
 models:
-  - name: clean_syntheticweather
-    columns:
-
-      - name: city
-        tests:
-          - not_null
-
-      - name: country
-        tests:
-          - not_null
-
-      - name: temperature
-        tests:
-          - not_null
-
-      - name: humidity
-        tests:
-          - not_null
-
   - name: clean_openweather
     columns:
 

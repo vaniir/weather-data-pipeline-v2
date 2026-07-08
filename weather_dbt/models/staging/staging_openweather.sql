@@ -24,5 +24,5 @@ SELECT
 
     ingested_time
 
-FROM raw_weather_data
+FROM {{ source('raw', 'raw_weather_data') }}
 WHERE source = 'OpenWeatherMap'

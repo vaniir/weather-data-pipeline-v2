@@ -7,7 +7,7 @@ SELECT
     MIN(temperature) AS min_temperature,
     MAX(temperature) AS max_temperature
 
-FROM {{ ref('clean_syntheticweather') }}
+FROM {{ ref('clean_openweather') }}
 
 WHERE valid_location
     AND valid_weather
